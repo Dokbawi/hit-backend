@@ -7,22 +7,24 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  BeforeInsert,
 } from 'typeorm'
+import * as bcrypt from 'bcrypt'
 
 @Entity('customers')
+@Index(['userId'])
 export class CustomerEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ length: 100 })
-  @Index()
+  @Column()
   name: string
 
-  @Column({ length: 20, nullable: true })
-  phone: string
+  @Column()
+  userId: string
 
-  @Column({ length: 100, nullable: true })
-  email: string
+  @Column()
+  password: string
 
   @CreateDateColumn()
   createdAt: Date
@@ -32,4 +34,9 @@ export class CustomerEntity {
 
   @OneToMany(() => ReservationEntity, (reservation) => reservation.customer)
   reservations: ReservationEntity[]
+
+  @BeforeInsert()
+  private beforeInsert() {
+    this.password = bcrypt.hashSync(this.password, 10)
+  }
 }

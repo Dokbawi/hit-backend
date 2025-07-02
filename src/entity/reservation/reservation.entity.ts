@@ -43,7 +43,7 @@ export class ReservationEntity {
   @Column({ length: 20 })
   phone: string
 
-  @Column({ name: 'member_size', default: 0 })
+  @Column({ default: 1 })
   memberSize: number
 
   @Column({

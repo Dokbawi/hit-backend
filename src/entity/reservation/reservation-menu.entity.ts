@@ -11,7 +11,8 @@ import { MenuEntity } from '@src/entity/restaurant/menu.entity'
 import { ReservationEntity } from './reservation.entity'
 
 @Entity('reservation_menus')
-@Index(['reservationId', 'menuId'], { unique: true })
+@Index(['reservationId'], { unique: true })
+@Index(['menuId'], { unique: true })
 export class ReservationMenuEntity {
   @PrimaryGeneratedColumn()
   id: number
@@ -31,9 +32,6 @@ export class ReservationMenuEntity {
   @ManyToOne(
     () => ReservationEntity,
     (reservation) => reservation.reservationMenus,
-    {
-      onDelete: 'CASCADE',
-    },
   )
   @JoinColumn({ name: 'reservation_id' })
   reservation: ReservationEntity

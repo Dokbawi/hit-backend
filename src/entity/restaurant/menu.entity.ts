@@ -11,7 +11,7 @@ import {
 } from 'typeorm'
 import { RestaurantEntity } from './restaurant.entity'
 import { ReservationMenuEntity } from '@src/entity/reservation/reservation-menu.entity'
-import { MenuCategory } from '@src/modules/restaurant/restaurant.enum'
+import { MenuCategory } from '@src/modules/menu/menu.enum'
 
 @Entity('menus')
 @Index(['restaurantId'])
@@ -28,7 +28,7 @@ export class MenuEntity {
   @Column({ length: 100 })
   name: string
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column()
   price: number
 
   @Column({
@@ -37,11 +37,8 @@ export class MenuEntity {
   })
   category: MenuCategory
 
-  @Column({ type: 'text', nullable: true })
+  @Column()
   description: string
-
-  @Column({ default: true })
-  isAvailable: boolean
 
   @CreateDateColumn()
   createdAt: Date
@@ -49,12 +46,10 @@ export class MenuEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
-  @UpdateDateColumn()
+  @Column({ type: 'timestamp', nullable: true })
   deletedAt: Date
 
-  @ManyToOne(() => RestaurantEntity, (restaurant) => restaurant.menus, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => RestaurantEntity, (restaurant) => restaurant.menus)
   @JoinColumn({ name: 'restaurant_id' })
   restaurant: RestaurantEntity
 

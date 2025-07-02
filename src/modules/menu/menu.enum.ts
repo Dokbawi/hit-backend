@@ -3,7 +3,3 @@ export enum MenuCategory {
   JAPANESE = '일식',
   CHINESE = '중식',
 }
-
-export enum AccountRole {
-  OWNER = 'owner',
-}

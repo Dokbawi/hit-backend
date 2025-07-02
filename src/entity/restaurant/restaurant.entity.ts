@@ -6,19 +6,30 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  BeforeInsert,
 } from 'typeorm'
 import { ReservationEntity } from '@src/entity/reservation/reservation.entity'
 import { MenuEntity } from './menu.entity'
-import { RestaurantAccountEntity } from './restaurant-account.entity'
+import * as bcrypt from 'bcrypt'
 
 @Entity('restaurants')
+@Index(['phone'])
+@Index(['userId'])
 export class RestaurantEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ length: 100 })
-  @Index()
+  @Column()
+  userId: string
+
+  @Column()
+  password: string
+
+  @Column()
   name: string
+
+  @Column()
+  phone: string
 
   @CreateDateColumn()
   createdAt: Date
@@ -26,14 +37,14 @@ export class RestaurantEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
-  @OneToMany(() => MenuEntity, (menu) => menu.restaurant, { cascade: true })
+  @OneToMany(() => MenuEntity, (menu) => menu.restaurant)
   menus: MenuEntity[]
 
   @OneToMany(() => ReservationEntity, (reservation) => reservation.restaurant)
   reservations: ReservationEntity[]
 
-  @OneToMany(() => RestaurantAccountEntity, (account) => account.restaurant, {
-    cascade: true,
-  })
-  accounts: RestaurantAccountEntity[]
+  @BeforeInsert()
+  private beforeInsert() {
+    this.password = bcrypt.hashSync(this.password, 10)
+  }
 }

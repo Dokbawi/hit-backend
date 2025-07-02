@@ -23,7 +23,7 @@ export const mysqlConfig = {
   synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
   dropSchema: process.env.TYPEROM_DROP_SCHEMA === 'true',
   entities: [process.env.TYPEORM_ENTITIES],
-  migrations: [process.env.TYPEORM_MIGRATIONS],
+  // migrations: [process.env.TYPEORM_MIGRATIONS],
   cli: {
     migrationsDir: process.env.TYPEORM_MIGRATION_DIR,
   },
@@ -40,5 +40,3 @@ export const dataSource = new DataSource({
   entities: [process.env.TYPEORM_ENTITIES],
   migrations: [process.env.TYPEORM_MIGRATIONS],
 })
-
-console.log('mysqlConfig : ', mysqlConfig)

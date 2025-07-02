@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { mysqlConfig } from './util/typeorm'
-import { customerModule } from './modules/customer/customer.module'
+import { MenuModule } from './modules/menu/menu.module'
+import { AuthModule } from './modules/auth/auth.module'
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
       useFactory: () => mysqlConfig,
     }),
-    customerModule,
+    MenuModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
