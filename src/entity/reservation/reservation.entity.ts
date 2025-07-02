@@ -18,9 +18,7 @@ import { ReservationMenuEntity } from './reservation-menu.entity'
 @Index(['customerId'])
 @Index(['phone'])
 @Index(['memberSize'])
-@Index(['restaurantId', 'reservationDate', 'startTime', 'endTime'], {
-  unique: true,
-})
+@Index(['restaurantId', 'date', 'startTime', 'endTime'])
 export class ReservationEntity {
   @PrimaryGeneratedColumn()
   id: number
@@ -32,7 +30,7 @@ export class ReservationEntity {
   restaurantId: number
 
   @Column({ type: 'date' })
-  reservationDate: Date
+  date: Date
 
   @Column({ type: 'time' })
   startTime: string
@@ -59,7 +57,10 @@ export class ReservationEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
-  @ManyToOne(() => CustomerEntity, (customer) => customer.reservations, {})
+  @Column({ type: 'timestamp', nullable: true })
+  deletedAt: Date
+
+  @ManyToOne(() => CustomerEntity, (customer) => customer.reservations)
   @JoinColumn({ name: 'customer_id' })
   customer: CustomerEntity
 
@@ -70,6 +71,7 @@ export class ReservationEntity {
   @OneToMany(
     () => ReservationMenuEntity,
     (reservationMenu) => reservationMenu.reservation,
+    { cascade: true },
   )
   reservationMenus: ReservationMenuEntity[]
 }

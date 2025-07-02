@@ -27,12 +27,10 @@ export class MenuService {
       deletedAt: IsNull(),
     } as FindOptionsWhere<MenuEntity>
 
-    // 이름 검색 (부분 일치)
     if (name) {
       whereConditions.name = Like(`%${name}%`)
     }
 
-    // 가격 범위 검색
     if (minPrice !== undefined && maxPrice !== undefined) {
       whereConditions.price = Between(minPrice, maxPrice)
     } else if (minPrice !== undefined) {

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common'
 import { MenuService } from './menu.service'
 import { UserTypeGuard } from '@src/guard/user-type.guard'
-import { ReqUser, UserTypes } from '@src/decorator/auth.decorator'
+import { ReqUser, UserTypes } from '@src/util/decorator/auth.decorator'
 import { RestaurantEntity } from '@src/entity/restaurant/restaurant.entity'
 import { JwtAuthGuard } from '@src/guard/jwt-auth.guard'
 import { CreateMenuDto, MenuFilterDto } from './menu.dto'

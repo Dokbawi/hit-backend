@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { USER_TYPES_KEY, UserType } from '@src/decorator/auth.decorator'
+import { USER_TYPES_KEY, UserType } from '@src/util/decorator/auth.decorator'
 
 @Injectable()
 export class UserTypeGuard implements CanActivate {
