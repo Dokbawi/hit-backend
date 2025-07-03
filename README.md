@@ -53,7 +53,7 @@ npm run test:e2e:setup
 
 ## 5. Swagger API 문서
 
-서버 실행 후 [http://localhost:3000/api](http://localhost:3000/api-docs)에서 Swagger UI로 API 명세를 확인할 수 있습니다.
+서버 실행 후 [http://localhost:3000/api-docs](http://localhost:3000/api-docs)에서 Swagger UI로 API 명세를 확인할 수 있습니다.
 
 ---
 
