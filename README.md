@@ -2,7 +2,7 @@
 
 ## 1. 환경 변수 파일 예시 (env/local.env)
 
-````
+```
 NODE_ENV = local
 
 TYPEORM_CONNECTION = mysql
@@ -19,6 +19,7 @@ TYPEORM_MIGRATION_DIR = src/migrations
 
 JWT_SECRET=your_jwt_secret
 
+```
 
 ## 2. 기초 데이터 생성 (seed)
 
@@ -26,7 +27,7 @@ JWT_SECRET=your_jwt_secret
 
 ```bash
 npm run seed
-````
+```
 
 - 실행 시 기존 데이터가 모두 삭제되고, 새로운 더미 데이터가 생성됩니다.
 - 생성되는 데이터: 고객 3명, 식당 2곳, 각 식당별 메뉴 4개, 고객별 예약 2개씩
