@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import {
   FindOptionsWhere,
+  In,
   IsNull,
   Like,
   MoreThanOrEqual,
@@ -12,10 +13,14 @@ import { ReservationStatus } from './reservation.enum'
 import {
   CreateReservationDto,
   ReservationFilterDto,
+  ReservationMenuDto,
   UpdateReservationDto,
 } from './reservation.dto'
 import { ReservationEntity } from '@src/entity/reservation/reservation.entity'
 import { ReservationMenuEntity } from '@src/entity/reservation/reservation-menu.entity'
+import { MenuEntity } from '@src/entity/restaurant/menu.entity'
+import { CustomerEntity } from '@src/entity/customer/customer.entity'
+import { RestaurantEntity } from '@src/entity/restaurant/restaurant.entity'
 
 @Injectable()
 export class ReservationService {
@@ -25,29 +30,35 @@ export class ReservationService {
 
     @InjectRepository(ReservationMenuEntity)
     private readonly reservationMenuRepository: Repository<ReservationMenuEntity>,
+
+    @InjectRepository(MenuEntity)
+    private readonly menuRepository: Repository<MenuEntity>,
   ) {}
 
   public async searchReservation(
-    customerId: number,
+    user: CustomerEntity | RestaurantEntity,
     query: ReservationFilterDto,
   ) {
-    const { name, date, minMemberSize, phone, menuName } = query
-
+    const { date, minMemberSize, phone, menuName } = query
+    const userType = (user as any)?.userType
     let queryBuilder = this.reservationRepository
       .createQueryBuilder('reservation')
-      .leftJoinAndSelect('reservation.customer', 'customer')
-      .leftJoinAndSelect('reservation.restaurant', 'restaurant')
       .leftJoinAndSelect('reservation.reservationMenus', 'reservationMenus')
       .leftJoinAndSelect('reservationMenus.menu', 'menu')
-      .where('reservation.customerId = :customerId', { customerId })
       .andWhere('reservation.status != :cancelledStatus', {
         cancelledStatus: ReservationStatus.CANCELLED,
       })
 
-    if (name) {
-      queryBuilder = queryBuilder.andWhere('customer.name LIKE :name', {
-        name: `%${name}%`,
-      })
+    if (userType === 'customer') {
+      queryBuilder = queryBuilder
+        .leftJoinAndSelect('reservation.customer', 'customer')
+        .leftJoinAndSelect('reservation.restaurant', 'restaurant')
+        .andWhere('customer.id = :userId', { userId: user.id })
+    } else if (userType === 'restaurant') {
+      queryBuilder = queryBuilder
+        .leftJoinAndSelect('reservation.restaurant', 'restaurant')
+        .leftJoinAndSelect('reservation.customer', 'customer')
+        .andWhere('restaurant.id = :userId', { userId: user.id })
     }
 
     if (phone) {
@@ -68,9 +79,16 @@ export class ReservationService {
     }
 
     if (menuName) {
-      queryBuilder = queryBuilder.andWhere('menu.name LIKE :menuName', {
-        menuName: `%${menuName}%`,
-      })
+      const subQuery = this.reservationRepository
+        .createQueryBuilder('r')
+        .select('r.id')
+        .leftJoin('r.reservationMenus', 'rm')
+        .leftJoin('rm.menu', 'm')
+        .where('m.name LIKE :menuName', { menuName: `%${menuName}%` })
+        .getQuery()
+
+      queryBuilder.andWhere(`reservation.id IN (${subQuery})`)
+      queryBuilder.setParameter('menuName', `%${menuName}%`)
     }
 
     return await queryBuilder.orderBy('reservation.createdAt', 'DESC').getMany()
@@ -83,31 +101,16 @@ export class ReservationService {
     const { date, endTime, startTime, restaurantId, memberSize, phone, menus } =
       body
 
-    if (startTime >= endTime) {
-      throw new BadRequestException(
-        '시작 시간은 종료 시간보다 이전이어야 합니다.',
-      )
-    }
+    await this.validateMenusExist(restaurantId, menus)
 
-    const overlappingReservation = await this.reservationRepository
-      .createQueryBuilder('reservation')
-      .where('reservation.restaurantId = :restaurantId', { restaurantId })
-      .andWhere('reservation.date = :date', { date })
-      .andWhere('reservation.status != :cancelledStatus', {
-        cancelledStatus: ReservationStatus.CANCELLED,
-      })
-      .andWhere('reservation.deletedAt IS NULL')
-      .andWhere(
-        '(reservation.startTime < :endTime AND reservation.endTime > :startTime)',
-        { startTime, endTime },
-      )
-      .getOne()
+    this.validateReservationTime(startTime, endTime)
 
-    if (overlappingReservation) {
-      throw new BadRequestException(
-        `이미 존재하는 예약입니다: ${date} ${startTime} ~ ${endTime}`,
-      )
-    }
+    await this.validateReservationConflict(
+      restaurantId,
+      date,
+      startTime,
+      endTime,
+    )
 
     const queryRunner =
       this.reservationRepository.manager.connection.createQueryRunner()
@@ -158,6 +161,65 @@ export class ReservationService {
     }
   }
 
+  private async validateMenusExist(
+    restaurantId: number,
+    menus: ReservationMenuDto[],
+  ) {
+    const menuIds = menus?.map((menu) => menu.menuId)
+    const existingMenus = await this.menuRepository.find({
+      where: {
+        id: In(menuIds),
+        restaurantId,
+        deletedAt: IsNull(),
+      },
+    })
+
+    if (existingMenus.length !== menuIds.length) {
+      const existingMenuIds = existingMenus.map((menu) => menu.id)
+      const missingMenuIds = menuIds.filter(
+        (id) => !existingMenuIds.includes(id),
+      )
+      throw new BadRequestException(
+        `존재하지 않는 메뉴가 포함되어 있습니다: ${missingMenuIds.join(', ')}`,
+      )
+    }
+  }
+
+  private validateReservationTime(startTime: string, endTime: string) {
+    if (startTime >= endTime) {
+      throw new BadRequestException(
+        '시작 시간은 종료 시간보다 이전이어야 합니다.',
+      )
+    }
+  }
+
+  private async validateReservationConflict(
+    restaurantId: number,
+    date: Date,
+    startTime: string,
+    endTime: string,
+  ) {
+    const overlappingReservation = await this.reservationRepository
+      .createQueryBuilder('reservation')
+      .where('reservation.restaurantId = :restaurantId', { restaurantId })
+      .andWhere('reservation.date = :date', { date })
+      .andWhere('reservation.status != :cancelledStatus', {
+        cancelledStatus: ReservationStatus.CANCELLED,
+      })
+      .andWhere('reservation.deletedAt IS NULL')
+      .andWhere(
+        '(reservation.startTime < :endTime AND reservation.endTime > :startTime)',
+        { startTime, endTime },
+      )
+      .getOne()
+
+    if (overlappingReservation) {
+      throw new BadRequestException(
+        `해당 시간대에 이미 예약이 존재합니다: ${date} ${startTime} ~ ${endTime}`,
+      )
+    }
+  }
+
   public async updateReservation(
     customerId: number,
     reservationId: number,
@@ -169,6 +231,7 @@ export class ReservationService {
       where: {
         id: reservationId,
         customerId,
+        deletedAt: IsNull(),
       },
       relations: ['reservationMenus'],
     })
@@ -179,6 +242,10 @@ export class ReservationService {
 
     if (existingReservation.status === ReservationStatus.CANCELLED) {
       throw new BadRequestException('취소된 예약은 수정할 수 없습니다.')
+    }
+
+    if (menus) {
+      await this.validateMenusExist(existingReservation.restaurantId, menus)
     }
 
     const queryRunner =

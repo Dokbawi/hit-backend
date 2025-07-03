@@ -1,4 +1,3 @@
-CREATE DATABASE IF NOT EXISTS mydatabase;
 CREATE USER IF NOT EXISTS 'user'@'%' IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON mydatabase.* TO 'user'@'%';
+ALTER USER 'user'@'%' IDENTIFIED WITH mysql_native_password BY 'password';
 FLUSH PRIVILEGES;

@@ -19,6 +19,7 @@ import {
   ReservationFilterDto,
   UpdateReservationDto,
 } from './reservation.dto'
+import { RestaurantEntity } from '@src/entity/restaurant/restaurant.entity'
 
 @Controller('reservation')
 @UseGuards(JwtAuthGuard, UserTypeGuard)
@@ -29,10 +30,10 @@ export class ReservationController {
   @Get()
   @UserTypes('customer', 'restaurant')
   public async searchReservation(
-    @ReqUser() customer: CustomerEntity,
+    @ReqUser() user: CustomerEntity | RestaurantEntity,
     @Query() query: ReservationFilterDto,
   ) {
-    return this.reservationService.searchReservation(customer.id, query)
+    return this.reservationService.searchReservation(user, query)
   }
 
   @Post()

@@ -22,7 +22,7 @@ export class MenuEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ name: 'restaurant_id' })
+  @Column()
   restaurantId: number
 
   @Column({ length: 100 })
@@ -50,7 +50,7 @@ export class MenuEntity {
   deletedAt: Date
 
   @ManyToOne(() => RestaurantEntity, (restaurant) => restaurant.menus)
-  @JoinColumn({ name: 'restaurant_id' })
+  @JoinColumn()
   restaurant: RestaurantEntity
 
   @OneToMany(

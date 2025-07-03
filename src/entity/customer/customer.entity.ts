@@ -12,7 +12,7 @@ import {
 import * as bcrypt from 'bcrypt'
 
 @Entity('customers')
-@Index(['userId'])
+@Index(['userId'], { unique: true })
 export class CustomerEntity {
   @PrimaryGeneratedColumn()
   id: number

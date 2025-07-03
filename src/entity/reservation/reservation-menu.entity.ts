@@ -11,15 +11,17 @@ import { MenuEntity } from '@src/entity/restaurant/menu.entity'
 import { ReservationEntity } from './reservation.entity'
 
 @Entity('reservation_menus')
+@Index(['reservationId'])
+@Index(['menuId'])
 @Index(['reservationId', 'menuId'], { unique: true })
 export class ReservationMenuEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ name: 'reservation_id' })
+  @Column()
   reservationId: number
 
-  @Column({ name: 'menu_id' })
+  @Column()
   menuId: number
 
   @Column({ default: 1 })
@@ -32,10 +34,10 @@ export class ReservationMenuEntity {
     () => ReservationEntity,
     (reservation) => reservation.reservationMenus,
   )
-  @JoinColumn({ name: 'reservation_id' })
+  @JoinColumn()
   reservation: ReservationEntity
 
   @ManyToOne(() => MenuEntity, (menu) => menu.reservationMenus)
-  @JoinColumn({ name: 'menu_id' })
+  @JoinColumn()
   menu: MenuEntity
 }

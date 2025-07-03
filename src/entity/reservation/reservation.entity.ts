@@ -23,10 +23,10 @@ export class ReservationEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ name: 'customer_id' })
+  @Column()
   customerId: number
 
-  @Column({ name: 'restaurant_id' })
+  @Column()
   restaurantId: number
 
   @Column({ type: 'date' })
@@ -61,11 +61,11 @@ export class ReservationEntity {
   deletedAt: Date
 
   @ManyToOne(() => CustomerEntity, (customer) => customer.reservations)
-  @JoinColumn({ name: 'customer_id' })
+  @JoinColumn()
   customer: CustomerEntity
 
   @ManyToOne(() => RestaurantEntity, (restaurant) => restaurant.reservations)
-  @JoinColumn({ name: 'restaurant_id' })
+  @JoinColumn()
   restaurant: RestaurantEntity
 
   @OneToMany(
